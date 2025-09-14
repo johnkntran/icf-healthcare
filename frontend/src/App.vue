@@ -1,11 +1,27 @@
-<script setup lang="ts"></script>
-
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <main>
+    <nav>
+      <div class="nav-wrapper cyan">
+        <ul id="nav-mobile" class="left">
+          <li><RouterLink to="/">Home</RouterLink></li>
+          <li><RouterLink to="/analytics">Analytics</RouterLink></li>
+        </ul>
+      </div>
+    </nav>
+    <RouterView id="main-view" />
+  </main>
 </template>
 
-<style scoped></style>
+<script setup lang="ts">
+  import { RouterLink, RouterView } from 'vue-router';
+  M.AutoInit();
+</script>
+
+<style scoped>
+  main {
+    margin: 1%;
+  }
+  #main-view {
+    margin-top: 2%;
+  }
+</style>
