@@ -3,8 +3,9 @@ from typing import Annotated
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 
-from models import User, Feedback
-from services import get_conn, get_or_create_user, create_feedback, list_feedback
+from models import User, Feedback, Insight
+from services import get_conn, get_or_create_user, create_feedback, list_feedback_and_insight
+from llm import generate_insight
 
 
 app = FastAPI()
@@ -24,7 +25,7 @@ app.add_middleware(
 
 
 @app.get('/healthcheck')
-async def healthcheck():
+async def healthcheck() -> dict:
     """
     Availability probe endpoint, useful for telemetry e.g. DataDog, OpsGenie, 
     etc. to check if resources are working.
@@ -37,15 +38,6 @@ async def healthcheck():
         'db_is_up': db_is_up,
         'llm_is_up': llm_is_up,
     }
-
-
-@app.get('/feedback')
-async def get_feedbacks(username: str) -> list[Feedback]:
-    conn = await get_conn()
-    try:
-        return list_feedback(username)
-    finally:
-        await conn.close()
     
 
 @app.post('/user')
@@ -66,5 +58,25 @@ async def make_feedback(
     conn = await get_conn()
     try:
         return await create_feedback(conn, username, title, body)
+    finally:
+        await conn.close()
+
+
+@app.post('/insight')
+async def make_insight(
+    feedback_id: Annotated[str, Body(embed=True)],
+) -> Insight:
+    conn = await get_conn()
+    try:
+        return await generate_insight(conn, feedback_id)
+    finally:
+        await conn.close()
+
+
+@app.get('/feedback_and_insights')
+async def get_feedback_and_insights(username: str) -> list[dict]:
+    conn = await get_conn()
+    try:
+        return await list_feedback_and_insight(conn, username)
     finally:
         await conn.close()
