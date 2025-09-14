@@ -17,3 +17,17 @@ CREATE TABLE IF NOT EXISTS healthcare_feedback (
         REFERENCES healthcare_user(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS healthcare_insight (
+    feedback_id VARCHAR(36) PRIMARY KEY,
+    sentiment VARCHAR(8) NOT NULL,
+    key_topics TEXT[],
+    action_required BOOLEAN,
+    summary TEXT,
+    tokens INT,
+    latency DOUBLE PRECISION,
+    CONSTRAINT fk_feedback
+        FOREIGN KEY (feedback_id)
+        REFERENCES healthcare_feedback(id)
+        ON DELETE CASCADE
+);
