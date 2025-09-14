@@ -3,10 +3,15 @@ import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('userStore', () => {
   const username = ref('');
+  const userWasSaved = ref(false);
 
   function setUsername(name: string) {
     username.value = name;
   }
 
-  return { username, setUsername };
+  function setUserWasSaved(val: boolean) {
+    userWasSaved.value = val;
+  }
+
+  return { username, userWasSaved, setUsername, setUserWasSaved };
 });

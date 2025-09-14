@@ -10,6 +10,7 @@ export function useUserComposable() {
 
   async function userSaved(name: string): Promise<undefined> {
     store.setUsername(name);
+    store.setUserWasSaved(true);
     await getFeedbackAndInsights();
   }
 

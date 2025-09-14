@@ -6,7 +6,7 @@
         <FeedbackForm 
           :username="store.username" 
           @saved="feedbackSaved" 
-          v-show="store.username">
+          v-show="store.userWasSaved">
         </FeedbackForm>
       </div>
       <div class="col s6">
