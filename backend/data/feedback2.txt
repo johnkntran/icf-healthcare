@@ -1,0 +1,3 @@
+EHR is just OK, not bad but not great either
+
+Hello. I'm Susy Griffin and I wanted to let you know that this EHR application does the job satisfactorily. Although it is not the worst EHR I've seen, it's not the best of its kind either. I am able to look up patients and do what I need to do. I wish there was functionality to populate patient information using dictation, rather than typing my notes manually. It would also be nice to summarize a patient interaction automatically using AI. My social security number is 827-82-1711. Thank you!

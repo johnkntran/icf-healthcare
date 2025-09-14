@@ -1,0 +1,72 @@
+version: '3'
+
+services:
+
+  database:
+    container_name: icf-database
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ./backend/init_healthcare_db.sql:/docker-entrypoint-initdb.d/init_healthcare_db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - icf
+
+  backend:
+    container_name: icf-backend
+    build:
+      dockerfile: backend/Dockerfile
+      context: .
+      secrets:
+        - env
+    command: bash -c "sleep infinity"
+    volumes:
+      - ./backend:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONDEVMODE=1
+    env_file:
+      - .env
+    networks:
+      - icf
+  
+  frontend:
+    container_name: icf-frontend
+    build:
+      dockerfile: frontend/Dockerfile
+      context: .
+    command: bash -c "sleep infinity"
+    volumes:
+      - ./frontend:/code
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+      - backend
+    env_file:
+      - .env
+    networks:
+      - icf
+
+networks:
+  icf:
+    name: icf-network
+
+volumes:
+  database:
+    name: icf-database
+
+secrets:
+  env:
+    file: .env
