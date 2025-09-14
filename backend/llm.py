@@ -44,7 +44,7 @@ llms = {
     LLMModel.GPT_O4_MINI: init_chat_model('openai:o4-mini', callbacks=[TokenAsyncHandler()]).with_structured_output(LLMInsight),
 }
 
-async def step1(state: State) -> dict:
+async def setup_initial_messages(state: State) -> dict:
     messages = state['messages']
     feedback = state['feedback'].model_dump()
     messages.append(SystemMessage(
@@ -60,7 +60,7 @@ async def step1(state: State) -> dict:
     return {'messages': messages}
 
 
-async def step2(state: State) -> dict:
+async def invoke_llm_to_summarize_feedback(state: State) -> dict:
     messages = state['messages']
     llm = llms[state['model']]
     t1 = time.time()
@@ -71,7 +71,12 @@ async def step2(state: State) -> dict:
     return {'insight': insight}
 
 
-async def step3(state: State, config: RunnableConfig, *, store: BaseStore) -> None:
+async def save_llm_insight_to_db(
+    state: State, 
+    config: RunnableConfig, 
+    *, 
+    store: BaseStore,
+) -> None:
     llm_insight = state['insight']
     feedback = state['feedback']
     llm_insight.feedback_id = feedback.id
@@ -83,9 +88,9 @@ async def step3(state: State, config: RunnableConfig, *, store: BaseStore) -> No
 
 
 builder = StateGraph(state_schema=State)
-builder.add_node('step1', step1)
-builder.add_node('step2', step2)
-builder.add_node('step3', step3)
+builder.add_node('step1', setup_initial_messages)
+builder.add_node('step2', invoke_llm_to_summarize_feedback)
+builder.add_node('step3', save_llm_insight_to_db)
 builder.add_edge(START, 'step1')
 builder.add_edge('step1', 'step2')
 builder.add_edge('step2', 'step3')
@@ -95,6 +100,7 @@ builder.add_edge('step3', END)
 DATABASE_URL = os.environ['DATABASE_URL']
 ENCRYPTION_KEY = binascii.a2b_hex(os.environ['LANGGRAPH_ENCRYPTION_KEY'])
 serde = EncryptedSerializer.from_pycryptodome_aes(key=ENCRYPTION_KEY)
+
 
 async def generate_insight(
     conn: asyncpg.connection.Connection, 
