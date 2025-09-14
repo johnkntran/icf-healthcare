@@ -90,3 +90,42 @@ builder.add_edge(START, 'step1')
 builder.add_edge('step1', 'step2')
 builder.add_edge('step2', 'step3')
 builder.add_edge('step3', END)
+
+
+DATABASE_URL = os.environ['DATABASE_URL']
+ENCRYPTION_KEY = binascii.a2b_hex(os.environ['LANGGRAPH_ENCRYPTION_KEY'])
+serde = EncryptedSerializer.from_pycryptodome_aes(key=ENCRYPTION_KEY)
+
+async def generate_insight(
+    conn: asyncpg.connection.Connection, 
+    feedback_id: str,
+) -> Insight:
+    async with (
+        AsyncPostgresSaver.from_conn_string(DATABASE_URL) as checkpointer, 
+        AsyncPostgresStore.from_conn_string(DATABASE_URL) as store,
+    ):
+        checkpointer.serde = serde
+        await store.setup()
+        await checkpointer.setup()
+        thread_id = str(uuid.uuid4())
+        user_id = ''.join(random.sample(string.ascii_letters, 10))
+        config = {"configurable": {"thread_id": thread_id, "user_id": user_id}}
+        graph = builder.compile(checkpointer=checkpointer, store=store)
+        feedback = await get_feedback(conn, feedback_id)
+        state = {
+            "messages": [],
+            "model": LLMModel.CLAUDE_3_7_SONNET, # Just use Claude for now, we can expose this in FastAPI later
+            'feedback': feedback,
+            'insight': None,
+        }
+        graph_resp = await graph.ainvoke(state, config)
+        llm_insight = graph_resp['insight']
+        return Insight(
+            feedback=feedback, 
+            sentiment=llm_insight.sentiment,
+            key_topics=llm_insight.key_topics,
+            action_required=llm_insight.action_required,
+            summary=llm_insight.summary,
+            tokens=llm_insight.tokens,
+            latency=llm_insight.latency,
+        )
