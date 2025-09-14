@@ -6,7 +6,9 @@
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
-  "scripts": {},
+  "scripts": {
+    "dev": "npx serve -p 3000 --cors --no-clipboard"
+  },
   "dependencies": {},
   "devDependencies": {}
 }
